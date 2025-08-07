@@ -37,7 +37,7 @@ const TodoApp = () => {
       <div className="todo-input">
         <input
           type="text"
-          placeholder="Yangi vazifa yozing..."
+          placeholder="Nimadir kiriting"
           value={text}
           onChange={(e) => setText(e.target.value)}
         />
