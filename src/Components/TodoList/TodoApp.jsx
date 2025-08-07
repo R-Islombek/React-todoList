@@ -1,17 +1,27 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./TodoApp.css";
 
 const TodoApp = () => {
-  const [todos, setTodos] = useState([]);
+  const [todos, setTodos] = useState(() => {
+    const savedTodos = localStorage.getItem("todos");
+    return savedTodos ? JSON.parse(savedTodos) : [];
+  });
   const [text, setText] = useState("");
+  const [filter, setFilter] = useState("all");
 
-  const handleAdd = () => {
+  useEffect(() => {
+    localStorage.setItem("todos", JSON.stringify(todos));
+  }, [todos]);
+
+  const handleAdd = (e) => {
+    e.preventDefault();
     if (text.trim() === "") return;
 
     const newTodo = {
       id: Date.now(),
       text,
       completed: false,
+      createdAt: new Date().toISOString(),
     };
 
     setTodos([newTodo, ...todos]);
@@ -26,36 +36,89 @@ const TodoApp = () => {
   };
 
   const handleDelete = (id) => {
-    const filteredTodos = todos.filter((todo) => todo.id !== id);
-    setTodos(filteredTodos);
+    setTodos(todos.filter((todo) => todo.id !== id));
   };
+
+  const clearCompleted = () => {
+    setTodos(todos.filter((todo) => !todo.completed));
+  };
+
+  const filteredTodos = todos.filter((todo) => {
+    if (filter === "active") return !todo.completed;
+    if (filter === "completed") return todo.completed;
+    return true;
+  });
+
+  const activeCount = todos.filter((todo) => !todo.completed).length;
 
   return (
     <div className="todo-container">
       <h1>📝 Mening Vazifalarim</h1>
 
-      <div className="todo-input">
+      <form onSubmit={handleAdd} className="todo-input">
         <input
           type="text"
-          placeholder="Nimadir kiriting"
+          placeholder="Yangi vazifa qo'shish..."
           value={text}
           onChange={(e) => setText(e.target.value)}
+          autoFocus
         />
-        <button onClick={handleAdd}>Qo'shish</button>
+        <button type="submit">Qo'shish</button>
+      </form>
+
+      <div className="todo-stats">
+        <span>{activeCount} ta aktiv vazifa</span>
+        <button onClick={clearCompleted} className="clear-btn">
+          Tozalash
+        </button>
+      </div>
+
+      <div className="todo-filters">
+        <button
+          className={filter === "all" ? "active" : ""}
+          onClick={() => setFilter("all")}
+        >
+          Hammasi
+        </button>
+        <button
+          className={filter === "active" ? "active" : ""}
+          onClick={() => setFilter("active")}
+        >
+          Faol
+        </button>
+        <button
+          className={filter === "completed" ? "active" : ""}
+          onClick={() => setFilter("completed")}
+        >
+          Bajarilgan
+        </button>
       </div>
 
       <ul className="todo-list">
-        {todos.map((todo) => (
-          <li
-            key={todo.id}
-            className={todo.completed ? "completed" : ""}
-          >
-            <span onClick={() => handleToggle(todo.id)}>{todo.text}</span>
-            <button className="delete-btn" onClick={() => handleDelete(todo.id)}>
-              ❌
-            </button>
-          </li>
-        ))}
+        {filteredTodos.length === 0 ? (
+          <li className="empty-state">Vazifalar topilmadi</li>
+        ) : (
+          filteredTodos.map((todo) => (
+            <li
+              key={todo.id}
+              className={todo.completed ? "completed" : ""}
+            >
+              <span onClick={() => handleToggle(todo.id)}>
+                {todo.text}
+                <span className="todo-date">
+                  {new Date(todo.createdAt).toLocaleString()}
+                </span>
+              </span>
+              <button
+                className="delete-btn"
+                onClick={() => handleDelete(todo.id)}
+                aria-label="O'chirish"
+              >
+                ❌
+              </button>
+            </li>
+          ))
+        )}
       </ul>
     </div>
   );
