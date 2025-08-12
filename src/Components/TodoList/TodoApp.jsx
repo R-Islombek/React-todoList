@@ -114,7 +114,7 @@ const TodoApp = () => {
                 onClick={() => handleDelete(todo.id)}
                 aria-label="O'chirish"
               >
-                ❌
+                X
               </button>
             </li>
           ))
